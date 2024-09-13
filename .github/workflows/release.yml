@@ -1,0 +1,39 @@
+name: Create GitHub Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create_release:
+    # Only run this job if the push is a merge from a branch with 'release-' prefix
+    if: startsWith(github.head_ref, 'release-')
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Extract version from Versions file
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(grep -oP 'Version:\s*\K.*' Versions)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Create GitHub release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+          body: |
+            Release ${{ env.VERSION }} from branch ${{ github.head_ref }} merged into main.
+          draft: false
+          prerelease: false
+
